@@ -5,7 +5,7 @@
 #define WIDTH 3840
 #define HEIGHT 2160
 
-#define EXPERIMENT_ITERATIONS 100
+#define EXPERIMENT_ITERATIONS 1000
 
 typedef unsigned char uchar;
 
@@ -13,7 +13,7 @@ struct _uchar3 {
     uchar x;
     uchar y;
     uchar z;
-};
+} __attribute__ ((aligned (4)));
 
 using uchar3 = _uchar3;
 
@@ -55,16 +55,45 @@ void convertBRG2RGBA_2(uchar3* brg, uchar4* rgba, int width, int height)
 {
     /* Per optimitzar el codi accedim de manera lineal al vector, de manera que */
     /* cada accés estigui a una posició contigua a la memoria de l'accés anterior */
-    for (int x=0; x<width*height; ++x)
+    for (int y=0; y<height; ++y)
     {
-        rgba[x].x   = brg[x].y;
-        rgba[x].y   = brg[x].z;
-        rgba[x].z   = brg[x].x;
-        rgba[x].w   = 255;
+        for (int x=0; x<width; ++x)
+        {	
+            uchar3 tmp_3 = brg[width* y + x];
+            uchar4 tmp_4;
+            
+            tmp_4.x = tmp_3.y;
+            tmp_4.y = tmp_3.z;
+            tmp_4.z = tmp_3.x;
+            tmp_4.w = 255;
+            
+            rgba[width* y + x] = tmp_4;
+        }
     }
 }
 
-int main() {
+void convertBRG2RGBA_3(uchar3* brg, uchar4* rgba, int width, int height) 
+{
+    /* Per paral·lelitzar la e */ 
+    for (int y=0; y<height; ++y)
+    {
+#pragma omp parallel for
+        for (int x=0; x<width; ++x)
+        {	
+            uchar3 tmp_3 = brg[width* y + x];
+            uchar4 tmp_4;
+            
+            tmp_4.x = tmp_3.y;
+            tmp_4.y = tmp_3.z;
+            tmp_4.z = tmp_3.x;
+            tmp_4.w = 255;
+            
+            rgba[width* y + x] = tmp_4;
+        }
+    }
+}
+
+int main(int argc, char *argv[]) {
 
     uchar3 *h_brg;
     uchar4 *h_rgba;
@@ -83,8 +112,9 @@ int main() {
     h_rgba = (uchar4*)malloc(sizeof(uchar4)*WIDTH*HEIGHT);
 
     auto t1 = std::chrono::high_resolution_clock::now();
-    for (int i=0; i<EXPERIMENT_ITERATIONS; ++i) {    
-	convertBRG2RGBA_2(h_brg, h_rgba, WIDTH, HEIGHT);
+    for (int i=0; i<EXPERIMENT_ITERATIONS; ++i) 
+    {    
+        convertBRG2RGBA_3(h_brg, h_rgba, WIDTH, HEIGHT);
     }
     auto t2 = std::chrono::high_resolution_clock::now();
 
