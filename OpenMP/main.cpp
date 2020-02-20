@@ -43,11 +43,24 @@ bool checkResults(uchar4* rgba, uchar3* brg, int size) {
 void convertBRG2RGBA(uchar3* brg, uchar4* rgba, int width, int height) {
     for (int x=0; x<width; ++x) {
     	for (int y=0; y<height; ++y) {	
-	    rgba[width * y + x].x = brg[width * y + x].y;
-	    rgba[width * y + x].y = brg[width * y + x].z;
-	    rgba[width * y + x].z = brg[width * y + x].x;
-	    rgba[width * y + x].w = 255;
-	}
+            rgba[width * y + x].x = brg[width * y + x].y;
+            rgba[width * y + x].y = brg[width * y + x].z;
+            rgba[width * y + x].z = brg[width * y + x].x;
+            rgba[width * y + x].w = 255;
+        }
+    }
+}
+
+void convertBRG2RGBA_2(uchar3* brg, uchar4* rgba, int width, int height) 
+{
+    /* Per optimitzar el codi accedim de manera lineal al vector, de manera que */
+    /* cada accés estigui a una posició contigua a la memoria de l'accés anterior */
+    for (int x=0; x<width*height; ++x)
+    {
+        rgba[x].x   = brg[x].y;
+        rgba[x].y   = brg[x].z;
+        rgba[x].z   = brg[x].x;
+        rgba[x].w   = 255;
     }
 }
 
@@ -71,7 +84,7 @@ int main() {
 
     auto t1 = std::chrono::high_resolution_clock::now();
     for (int i=0; i<EXPERIMENT_ITERATIONS; ++i) {    
-	convertBRG2RGBA(h_brg, h_rgba, WIDTH, HEIGHT);
+	convertBRG2RGBA_2(h_brg, h_rgba, WIDTH, HEIGHT);
     }
     auto t2 = std::chrono::high_resolution_clock::now();
 
