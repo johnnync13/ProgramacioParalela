@@ -1,0 +1,2 @@
+# ProgramacioParalela
+Programació paralela
