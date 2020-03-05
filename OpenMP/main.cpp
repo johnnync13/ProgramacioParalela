@@ -138,7 +138,6 @@ int main(int argc, char *argv[])
     h_rgba = (uchar4*)malloc(sizeof(uchar4)*WIDTH*HEIGHT);
     
     /* Executant el numero d'experiments */
-    
     #pragma omp parallel
     {
     #pragma omp critical
@@ -146,13 +145,13 @@ int main(int argc, char *argv[])
         std::cout << "Soc el fil numero " 
         << omp_get_thread_num() << std::endl;
     }
+    #pragma omp single
     for (int t = 0; t < experiment; t++)
     {
         auto t1 = std::chrono::high_resolution_clock::now();
-        #pragma omp for reduction(+: duration)
         for (int i=0; i<EXPERIMENT_ITERATIONS; ++i) 
         {
-
+            #pragma omp task
             func_ptr_conver(h_brg, h_rgba, WIDTH, HEIGHT);
         }
         auto t2 = std::chrono::high_resolution_clock::now();
