@@ -1,4 +1,5 @@
 #include <iostream>
+#include <boost/lexical_cast.hpp>
 #include <omp.h>
 #include <chrono>
 
@@ -77,7 +78,6 @@ void convertBRG2RGBA_3(uchar3* brg, uchar4* rgba, int width, int height)
     /* Per paral·lelitzar la e */ 
     for (int y=0; y<height; ++y)
     {
-#pragma omp parallel for
         for (int x=0; x<width; ++x)
         {	
             uchar3 tmp_3 = brg[width* y + x];
@@ -93,12 +93,38 @@ void convertBRG2RGBA_3(uchar3* brg, uchar4* rgba, int width, int height)
     }
 }
 
-int main(int argc, char *argv[]) {
 
+/*  */
+void (*func_ptr[3])(uchar3*, uchar4*, int, int) = {
+    convertBRG2RGBA,
+    convertBRG2RGBA_2,
+    convertBRG2RGBA_3
+};
+
+/* FUNCIO PRINCIPAL */
+int main(int argc, char *argv[])
+{
+    /* argv: 1 -> numero de l'exercici, 2 -> numero d'experiments */
+    
+    /* DECLARACIO DE VARIABLES */
     uchar3 *h_brg;
     uchar4 *h_rgba;
+    
+    /* func_ptr_conver: Punter a la funcio de conversio */
+    void (*func_ptr_conver)(uchar3*, uchar4*, int, int);
 
-    int bar_widht = HEIGHT/3;
+    int bar_widht       = HEIGHT/3;
+    
+    /* numero_exercici: El numero de l'exercici que volem executar */
+    /* experiments: El numero d'experiments que volem assajar */
+    int numero_exercici = boost::lexical_cast<int>(argv[1]) - 1;
+    int experiment      = boost::lexical_cast<int>(argv[2]);
+    
+    /* duration: Emmagatzema la duracio de totes les execucions del programa */
+    float duration      = 0.0;
+    
+    /* Escollim la funcio de conversio */
+    func_ptr_conver = func_ptr[numero_exercici];
 
     // Alloc and generate BRG bars.
     h_brg = (uchar3*)malloc(sizeof(uchar3)*WIDTH*HEIGHT);
@@ -110,17 +136,26 @@ int main(int argc, char *argv[]) {
 
     // Alloc RGBA pointers
     h_rgba = (uchar4*)malloc(sizeof(uchar4)*WIDTH*HEIGHT);
+    
+    /* Executant el numero d'experiments */
+    for (int t = 0; t < experiment; t++)
+    {
 
-    auto t1 = std::chrono::high_resolution_clock::now();
-    for (int i=0; i<EXPERIMENT_ITERATIONS; ++i) 
-    {    
-        convertBRG2RGBA_3(h_brg, h_rgba, WIDTH, HEIGHT);
+        auto t1 = std::chrono::high_resolution_clock::now();
+        #pragma omp parallel for
+        for (int i=0; i<EXPERIMENT_ITERATIONS; ++i) 
+        {    
+            func_ptr_conver(h_brg, h_rgba, WIDTH, HEIGHT);
+        }
+        auto t2 = std::chrono::high_resolution_clock::now();
+
+        duration += std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
     }
-    auto t2 = std::chrono::high_resolution_clock::now();
-
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+    
     std::cout << "convertBRG2RGBA time for " << EXPERIMENT_ITERATIONS \
-    << " iterations = "<< duration << "us" << std::endl;
+    << " iterations = "<< duration / experiment << "us" << std::endl;
+    
+    std::cout << "Executed " << experiment << " times" << std::endl;
 
     bool ok = checkResults(h_rgba, h_brg, WIDTH*HEIGHT);
 
