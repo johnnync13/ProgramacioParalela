@@ -138,18 +138,28 @@ int main(int argc, char *argv[])
     h_rgba = (uchar4*)malloc(sizeof(uchar4)*WIDTH*HEIGHT);
     
     /* Executant el numero d'experiments */
+    
+    #pragma omp parallel
+    {
+    #pragma omp critical
+    {
+        std::cout << "Soc el fil numero " 
+        << omp_get_thread_num() << std::endl;
+    }
     for (int t = 0; t < experiment; t++)
     {
-
         auto t1 = std::chrono::high_resolution_clock::now();
-        #pragma omp parallel for
+        #pragma omp for reduction(+: duration)
         for (int i=0; i<EXPERIMENT_ITERATIONS; ++i) 
-        {    
+        {
+
             func_ptr_conver(h_brg, h_rgba, WIDTH, HEIGHT);
         }
         auto t2 = std::chrono::high_resolution_clock::now();
 
-        duration += std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+        duration += std::chrono::duration_cast<std::chrono::microseconds>
+                ( t2 - t1 ).count();
+    }
     }
     
     std::cout << "convertBRG2RGBA time for " << EXPERIMENT_ITERATIONS \
