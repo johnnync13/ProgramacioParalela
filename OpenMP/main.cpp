@@ -1,7 +1,8 @@
 #include <iostream>
-#include <boost/lexical_cast.hpp>
+//#include <boost/lexical_cast.hpp>
 #include <omp.h>
 #include <chrono>
+#include <stdlib.h>
 
 #define WIDTH 3840
 #define HEIGHT 2160
@@ -117,8 +118,8 @@ int main(int argc, char *argv[])
     
     /* numero_exercici: El numero de l'exercici que volem executar */
     /* experiments: El numero d'experiments que volem assajar */
-    int numero_exercici = boost::lexical_cast<int>(argv[1]) - 1;
-    int experiment      = boost::lexical_cast<int>(argv[2]);
+    int numero_exercici = atoi(argv[1]) - 1;
+    int experiment      = atoi(argv[2]);
     
     /* duration: Emmagatzema la duracio de totes les execucions del programa */
     float duration      = 0.0;
