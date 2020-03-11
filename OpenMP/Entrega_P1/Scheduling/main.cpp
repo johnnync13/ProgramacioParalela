@@ -79,8 +79,7 @@ void convertBRG2RGBA_2(uchar3* brg, uchar4* rgba, int width, int height)
 void convertBRG2RGBA_3(uchar3* brg, uchar4* rgba, int width, int height) 
 {
     //Exercici 5
-    //aquest for es molt millor
-    //#pragma omp parrallel for 
+    //#pragma omp parrallel for aquest molt millor
     //#pragma omp for schedule(static, 1)
     //#pragma omp for schedule(static, STATIC_CHUNK)
     //#pragma omp for schedule(dynamic, 1)
@@ -149,27 +148,17 @@ int main(int argc, char *argv[])
     h_rgba = (uchar4*)malloc(sizeof(uchar4)*WIDTH*HEIGHT);
     
     /* Executant el numero d'experiments */
-    #pragma omp parallel
-    {
-    #pragma omp critical
-    {
-        std::cout << "Soc el fil numero " 
-        << omp_get_thread_num() << std::endl;
-    }
-    #pragma omp single
     for (int t = 0; t < experiment; t++)
     {
         auto t1 = std::chrono::high_resolution_clock::now();
         for (int i=0; i<EXPERIMENT_ITERATIONS; ++i) 
         {
-            #pragma omp task
             func_ptr_conver(h_brg, h_rgba, WIDTH, HEIGHT);
         }
         auto t2 = std::chrono::high_resolution_clock::now();
 
         duration += std::chrono::duration_cast<std::chrono::microseconds>
                 ( t2 - t1 ).count();
-    }
     }
     
     std::cout << "convertBRG2RGBA time for " << EXPERIMENT_ITERATIONS \
