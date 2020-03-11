@@ -80,11 +80,11 @@ void convertBRG2RGBA_3(uchar3* brg, uchar4* rgba, int width, int height)
 {
     //Exercici 5
     //#pragma omp parrallel for aquest molt millor
-    #pragma omp for schedule(static, 1)
+    //#pragma omp for schedule(static, 1)
     //#pragma omp for schedule(static, STATIC_CHUNK)
-    //#pragma omp for schedule(guided)
     //#pragma omp for schedule(dynamic, 1)
     //#pragma omp for schedule(dynamic, DYNAMIC_CHUNK)
+    //#pragma omp for schedule(guided)
     for (int y=0; y<height; ++y)
     {
         //#pragma omp parrallel for aquest pitjor perque continuament creem i destruim tasques
